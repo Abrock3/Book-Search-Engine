@@ -38,18 +38,13 @@ const resolvers = {
       const token = signToken(user);
       return { token, user };
     },
-    saveBook: async (parent, { user, body }) => {
-      try {
-        const updatedUser = await User.findOneAndUpdate(
-          { _id: user._id },
-          { $addToSet: { savedBooks: body } },
-          { new: true, runValidators: true }
-        );
-        return res.json(updatedUser);
-      } catch (err) {
-        console.log(err);
-        return res.status(400).json(err);
-      }
+    saveBook: async (parent, { userId, bookToSave }) => {
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: userId },
+        { $addToSet: { savedBooks: bookToSave } },
+        { new: true, runValidators: true }
+      );
+      return updatedUser;
     },
     deleteBook: async (parent, { user, params }) => {
       const updatedUser = await User.findOneAndUpdate(

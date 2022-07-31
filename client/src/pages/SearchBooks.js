@@ -47,15 +47,20 @@ const SearchBooks = () => {
       }
 
       const { items } = await response.json();
-
-      const bookData = items.map((book) => ({
-        bookId: book.id,
-        authors: book.volumeInfo.authors || ["No author to display"],
-        title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || "",
-      }));
-
+      console.log(items);
+      const bookData = items.map((book) => {
+        console.log(book.volumeInfo.description);
+        return {
+          bookId: book.id,
+          authors: book.volumeInfo.authors || ["No author to display"],
+          title: book.volumeInfo.title || "No Title To Display",
+          description:
+            book.volumeInfo.description ||
+            book.volumeInfo.subtitle ||
+            "No Description to Display",
+          image: book.volumeInfo.imageLinks?.thumbnail || "",
+        };
+      });
       setSearchedBooks(bookData);
       setSearchInput("");
     } catch (err) {
@@ -74,18 +79,19 @@ const SearchBooks = () => {
     if (!token) {
       return false;
     }
+    const profile = Auth.getProfile();
 
     try {
       const { data } = await saveBookFunction({
-        variables: { bookToSave, token },
+        variables: { bookToSave, userId: profile.data._id },
       });
 
       if (!data) {
         throw new Error("something went wrong!");
       }
-
+      console.log(bookToSave);
       // if book successfully saves to user's account, save book id to state
-      setSavedBookIds([...savedBookIds, data.saveBook.bookId]);
+      setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {
       console.error(err);
     }
