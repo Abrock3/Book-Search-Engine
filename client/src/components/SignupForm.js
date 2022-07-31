@@ -7,7 +7,7 @@ import Auth from "../utils/auth";
 
 const SignupForm = () => {
   // set initial form state
-  const [userFormData, setUserFormData] = useState({
+  const [signupFormData, setsignupFormData] = useState({
     username: "",
     email: "",
     password: "",
@@ -20,7 +20,7 @@ const SignupForm = () => {
     useMutation(CREATE_USER);
   const handleInputChange = (event) => {
     const { name, value } = event.target;
-    setUserFormData({ ...userFormData, [name]: value });
+    setsignupFormData({ ...signupFormData, [name]: value });
   };
 
   const handleFormSubmit = async (event) => {
@@ -35,16 +35,15 @@ const SignupForm = () => {
 
     try {
       const { data } = await createUserFunction({
-        variables: { ...userFormData },
+        variables: { ...signupFormData },
       });
-      console.log(data);
       Auth.login(data.createUser.token);
     } catch (err) {
       console.error(err);
       setShowAlert(true);
     }
 
-    setUserFormData({
+    setsignupFormData({
       username: "",
       email: "",
       password: "",
@@ -72,7 +71,7 @@ const SignupForm = () => {
             placeholder="Your username"
             name="username"
             onChange={handleInputChange}
-            value={userFormData.username}
+            value={signupFormData.username}
             required
           />
           <Form.Control.Feedback type="invalid">
@@ -87,7 +86,7 @@ const SignupForm = () => {
             placeholder="Your email address"
             name="email"
             onChange={handleInputChange}
-            value={userFormData.email}
+            value={signupFormData.email}
             required
           />
           <Form.Control.Feedback type="invalid">
@@ -102,7 +101,7 @@ const SignupForm = () => {
             placeholder="Your password"
             name="password"
             onChange={handleInputChange}
-            value={userFormData.password}
+            value={signupFormData.password}
             required
           />
           <Form.Control.Feedback type="invalid">
@@ -112,9 +111,9 @@ const SignupForm = () => {
         <Button
           disabled={
             !(
-              userFormData.username &&
-              userFormData.email &&
-              userFormData.password
+              signupFormData.username &&
+              signupFormData.email &&
+              signupFormData.password
             )
           }
           type="submit"
