@@ -47,9 +47,7 @@ const SearchBooks = () => {
       }
 
       const { items } = await response.json();
-      console.log(items);
       const bookData = items.map((book) => {
-        console.log(book.volumeInfo.description);
         return {
           bookId: book.id,
           authors: book.volumeInfo.authors || ["No author to display"],
@@ -89,7 +87,6 @@ const SearchBooks = () => {
       if (!data) {
         throw new Error("something went wrong!");
       }
-      console.log(bookToSave);
       // if book successfully saves to user's account, save book id to state
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
     } catch (err) {

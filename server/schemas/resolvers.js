@@ -3,14 +3,11 @@ const { signToken } = require("../utils/auth");
 const { AuthenticationError } = require("apollo-server-express");
 const resolvers = {
   Query: {
-    user: async (parent, { user = null, params }) => {
+    user: async (parent, { userId }) => {
       const foundUser = await User.findOne({
-        $or: [
-          { _id: user ? user._id : params.id },
-          { username: params.username },
-        ],
+        _id: userId,
       });
-      if (!foundUser) {
+      if (foundUser) {
         return foundUser;
       }
       return;
@@ -46,18 +43,13 @@ const resolvers = {
       );
       return updatedUser;
     },
-    deleteBook: async (parent, { user, params }) => {
+    deleteBook: async (parent, { bookId, userId }) => {
       const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $pull: { savedBooks: { bookId: params.bookId } } },
+        { _id: userId },
+        { $pull: { savedBooks: { bookId: bookId } } },
         { new: true }
       );
-      if (!updatedUser) {
-        return res
-          .status(404)
-          .json({ message: "Couldn't find user with this id!" });
-      }
-      return res.json(updatedUser);
+      return updatedUser;
     },
   },
 };
