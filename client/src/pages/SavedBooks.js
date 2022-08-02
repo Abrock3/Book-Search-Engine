@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Jumbotron,
   Container,
@@ -13,6 +13,7 @@ import Auth from "../utils/auth";
 import { removeBookId, getSavedBookIds } from "../utils/localStorage";
 
 const SavedBooks = () => {
+  const token = Auth.loggedIn() ? Auth.getToken() : null;
   const profile = Auth.getProfile();
   const {
     data: queryData,
@@ -22,21 +23,15 @@ const SavedBooks = () => {
   } = useQuery(QUERY_USER, {
     variables: { userId: profile.data._id },
   });
-  const [deleteBook, { error, loading, data }] = useMutation(DELETE_BOOK);
+  const [deleteBook] = useMutation(DELETE_BOOK);
 
-  // use this to determine if `useEffect()` hook needs to run again
-  const savedBookIdsLength = getSavedBookIds().length;
   useEffect(() => {
-    const refreshData = async () => {
-      const variables = { userId: profile.data._id };
-
-      await refetch(variables);
-    };
-    refreshData();
-  }, [savedBookIdsLength]);
+    if (getSavedBookIds().length !== queryData?.user?.savedBooks?.length)
+      refetch({ userId: profile.data._id });
+  });
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
-  const handleDeleteBook = async (bookId) => {
+  const handleDeleteBook = async (bookId, userId, refetch) => {
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
     if (!token) {
@@ -44,23 +39,28 @@ const SavedBooks = () => {
     }
 
     try {
-      const response = await deleteBook(bookId);
+      const response = await deleteBook({
+        variables: {
+          bookId: bookId,
+          userId: userId,
+        },
+      });
 
-      if (!response.ok) {
+      if (!response) {
         throw new Error("something went wrong!");
       }
 
-      const updatedUser = await response.json();
-      // setUserData(updatedUser);
       // upon success, remove book's id from localStorage
       removeBookId(bookId);
+      refetch();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // if data isn't here yet, say so
-  if (queryLoading) {
+  if (!token) {
+    return <h2>Log in to see your saved books!</h2>;
+  } else if (queryLoading) {
     return <h2>LOADING...</h2>;
   } else if (queryError) {
     return <h2>There was an error loading this page.</h2>;
@@ -75,16 +75,16 @@ const SavedBooks = () => {
       </Jumbotron>
       <Container>
         <h2>
-          {queryData.user.savedBooks.length
-            ? `Viewing ${queryData.user.savedBooks.length} saved ${
-                queryData.user.savedBooks.length === 1 ? "book" : "books"
+          {queryData.user?.savedBooks?.length
+            ? `Viewing ${queryData.user?.savedBooks?.length} saved ${
+                queryData.user?.savedBooks?.length === 1 ? "book" : "books"
               }:`
             : "You have no saved books!"}
         </h2>
         <CardColumns>
-          {queryData.user.savedBooks.map((book) => {
+          {queryData.user?.savedBooks?.map((book, index) => {
             return (
-              <Card key={book.bookId} border="dark">
+              <Card key={index} border="dark">
                 {book.image ? (
                   <Card.Img
                     src={book.image}
@@ -98,7 +98,9 @@ const SavedBooks = () => {
                   <Card.Text>{book.description}</Card.Text>
                   <Button
                     className="btn-block btn-danger"
-                    onClick={() => handleDeleteBook(book.bookId)}
+                    onClick={() =>
+                      handleDeleteBook(book.bookId, profile.data._id, refetch)
+                    }
                   >
                     Delete this Book!
                   </Button>

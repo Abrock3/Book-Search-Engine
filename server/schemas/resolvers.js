@@ -24,6 +24,7 @@ const resolvers = {
       }
     },
     login: async (parent, { email, password }) => {
+    
       const user = await User.findOne({ email });
       if (!user) {
         throw new AuthenticationError("Incorrect credentials");
@@ -49,6 +50,7 @@ const resolvers = {
         { $pull: { savedBooks: { bookId: bookId } } },
         { new: true }
       );
+      console.log(updatedUser);
       return updatedUser;
     },
   },
